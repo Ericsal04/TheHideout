@@ -1,2 +1,2 @@
 # TheHideout
-The Hideout is a deadlock looking for group web application built with django.
+The Hideout is a Deadlock looking for group web application built with Django.
