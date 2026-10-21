@@ -1,2 +1,2 @@
 # TheHideout
-The Hideout is a Deadlock looking for group web application built with Django.
+TheHideout is a Looking for Group application designed for players of the game Deadlock it is developed using the Django framework. Deadlock is a team based game that revolves around teamwork and communication, so finding good teammates is always a priority when playing. Our application will allow users to create accounts, customize their profiles and most importantly, browse Looking for Group posts made by other players based on preferences like rank, region and playstyle. This way players can find people that most fit their preference so that they stand a better chance at winning games instead of relying on random teammates.
