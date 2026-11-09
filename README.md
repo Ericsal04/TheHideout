@@ -32,11 +32,18 @@ Our team will GitHub Projects for task management. Each sprint will focus on com
 
 ### User Stories
 As a new player, I want to register an account so that I can connect with other Deadlock players.
+
 As a returning user, I want to log in so that I can access my account.
+
 As a signed-in user, I want to log out so that I can keep my account secure on a shared device.
+
 As a user, I want clear error messages when I submit invalid information so that I can correct it.
+
 As a visitor, I want to understand how TheHideout works so that I can decide whether to join.
+
 As a player, I want to list my preferred roles, skill level, and play style so that others can see whether we would be good teammates.
+
 As a player, I want to find people with similar goals so that I can build a compatible squad.
+
 As a player, I want to contact potential teammates so that we can arrange a match.
 
