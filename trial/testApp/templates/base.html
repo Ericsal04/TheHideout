@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101310">
+    <meta name="description" content="TheHideout is a home for Deadlock players looking for their next squad.">
+    <title>{% block title %}TheHideout | Find your people{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'testApp/css/style.css' %}">
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="wordmark" href="{% url 'home' %}" aria-label="TheHideout home">THE<span>HIDEOUT</span><span class="wordmark-dot" aria-hidden="true">.</span></a>
+            <nav class="site-nav" aria-label="Main navigation">
+                <a href="{% url 'home' %}#how-it-works">About</a>
+                {% if user.is_authenticated %}
+                    <span class="nav-user">{{ user.username }}</span>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button class="button button-outline button-small" type="submit">Log out</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}">Log in</a>
+                    <a class="button button-small" href="{% url 'register' %}">Create account</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+    <main id="main-content" class="container" tabindex="-1">
+        {% if messages %}
+            <div class="messages" role="status" aria-live="polite">
+                {% for message in messages %}<p class="message">{{ message }}</p>{% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>TheHideout <span class="muted">/ Made for the next match.</span></p>
+            <p class="muted">A student project. Not affiliated with Valve.</p>
+        </div>
+    </footer>
+</body>
+</html>
+trial/testApp/templates/testApp/form_fields.html
+{% if form.non_field_errors %}
+    <div class="form-errors" role="alert">{{ form.non_field_errors }}</div>
+{% endif %}
+{% for field in form %}
+    <div class="form-field">
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.help_text %}
+            <div class="help-text" id="{{ field.auto_id }}_helptext">{{ field.help_text|safe }}</div>
+        {% endif %}
+        {% if field.errors %}<div role="alert">{{ field.errors }}</div>{% endif %}
+    </div>
+{% endfor %}
