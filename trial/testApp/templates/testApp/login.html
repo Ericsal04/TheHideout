@@ -1,0 +1,25 @@
+{% extends 'testApp/base.html' %}
+
+{% block title %}Log in | TheHideout{% endblock %}
+
+{% block content %}
+<section class="auth-layout" aria-labelledby="auth-title">
+    <div class="auth-intro">
+        <p class="eyebrow">There is always another match</p>
+        <h1>Welcome<br><span>back.</span></h1>
+        <p class="muted">Your place in TheHideout is right where you left it.</p>
+        <a class="text-link" href="{% url 'home' %}"><span aria-hidden="true">&larr;</span> Back to TheHideout</a>
+    </div>
+    <div class="auth-card">
+        <h2 id="auth-title">Log in to TheHideout</h2>
+        <p class="muted">Use your TheHideout username and password.</p>
+        <form class="auth-form" method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            {% include 'testApp/form_fields.html' %}
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+            <button class="button button-full" type="submit">Log in <span aria-hidden="true">&rarr;</span></button>
+        </form>
+        <p class="auth-switch">New around here? <a href="{% url 'register' %}">Create an account</a></p>
+    </div>
+</section>
+{% endblock %}

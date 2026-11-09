@@ -1,0 +1,24 @@
+{% extends 'testApp/base.html' %}
+
+{% block title %}Create account | TheHideout{% endblock %}
+
+{% block content %}
+<section class="auth-layout" aria-labelledby="auth-title">
+    <div class="auth-intro">
+        <p class="eyebrow">Your next squad starts here</p>
+        <h1>Make yourself<br><span>at home.</span></h1>
+        <p class="muted">Good teammates make all the difference. Join a home for Deadlock players and be part of what comes next.</p>
+        <a class="text-link" href="{% url 'home' %}"><span aria-hidden="true">&larr;</span> Back to TheHideout</a>
+    </div>
+    <div class="auth-card">
+        <h2 id="auth-title">Create your account</h2>
+        <p class="muted">Pick a username and a strong password.</p>
+        <form class="auth-form" method="post" action="{% url 'register' %}">
+            {% csrf_token %}
+            {% include 'testApp/form_fields.html' %}
+            <button class="button button-full" type="submit">Create account <span aria-hidden="true">&rarr;</span></button>
+        </form>
+        <p class="auth-switch">Already a member? <a href="{% url 'login' %}">Log in</a></p>
+    </div>
+</section>
+{% endblock %}
