@@ -98,4 +98,127 @@ class RegistrationTests(TestCase):
     def test_authenticated_user_cannot_create_another_account(self):
         user = User.objects.create_user(username='existing_player', password=TEST_PASSWORD)
         self.client.force_login(user)
-... (124 lines left)
+
+        self.assertRedirects(self.client.get(reverse('register')), reverse('home'))
+        self.assertRedirects(self.register(), reverse('home'))
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_registration_rejects_unsupported_methods(self):
+        self.assertEqual(self.client.put(reverse('register')).status_code, 405)
+        self.assertFalse(User.objects.exists())
+
+
+class AuthenticationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(username='hideout_player', password=TEST_PASSWORD)
+
+    def log_in(self, **overrides):
+        data = {'username': self.user.username, 'password': TEST_PASSWORD}
+        data.update(overrides)
+        return self.client.post(reverse('login'), data)
+
+    def test_login_page_renders(self):
+        response = self.client.get(reverse('login'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'testApp/login.html')
+
+    def test_valid_login_creates_session_and_shows_member_navigation(self):
+        response = self.log_in()
+
+        self.assertRedirects(response, reverse('home'))
+        self.assertEqual(self.client.session[SESSION_KEY], str(self.user.pk))
+        home = self.client.get(reverse('home'))
+        self.assertContains(home, self.user.username)
+        self.assertContains(home, 'Log out')
+        self.assertNotContains(home, 'href="' + reverse('register') + '"')
+
+    def test_invalid_credentials_display_error_without_session(self):
+        response = self.log_in(password='incorrect-password')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['form'].non_field_errors())
+        self.assertContains(response, 'Please enter a correct username and password.')
+        self.assertNotIn(SESSION_KEY, self.client.session)
+
+    def test_inactive_user_cannot_log_in(self):
+        self.user.is_active = False
+        self.user.save(update_fields=['is_active'])
+
+        response = self.log_in()
+
+        self.assertTrue(response.context['form'].non_field_errors())
+        self.assertNotIn(SESSION_KEY, self.client.session)
+
+    def test_login_preserves_and_accepts_a_local_next_destination(self):
+        destination = reverse('home') + '?from=login'
+        response = self.client.get(reverse('login'), {'next': destination})
+        self.assertContains(response, 'name="next" value="' + destination + '"')
+
+        self.assertRedirects(self.log_in(next=destination), destination)
+
+    def test_login_rejects_external_next_destinations(self):
+        for destination in ['https://example.com/', '//example.com/']:
+            with self.subTest(destination=destination):
+                self.client.logout()
+                self.assertRedirects(self.log_in(next=destination), reverse('home'))
+
+    def test_authenticated_user_is_redirected_away_from_login(self):
+        self.client.force_login(self.user)
+
+        self.assertRedirects(self.client.get(reverse('login')), reverse('home'))
+
+    def test_post_logout_clears_session(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse('logout'))
+
+        self.assertRedirects(response, reverse('home'))
+        self.assertNotIn(SESSION_KEY, self.client.session)
+        self.assertContains(self.client.get(reverse('home')), 'Create account')
+
+    def test_get_logout_is_rejected_without_ending_session(self):
+        self.client.force_login(self.user)
+
+        self.assertEqual(self.client.get(reverse('logout')).status_code, 405)
+        self.assertIn(SESSION_KEY, self.client.session)
+
+
+class CsrfTests(TestCase):
+    def test_account_endpoints_reject_posts_without_csrf_tokens(self):
+        for route in ['register', 'login', 'logout']:
+            with self.subTest(route=route):
+                client = Client(enforce_csrf_checks=True)
+                self.assertEqual(client.post(reverse(route)).status_code, 403)
+        self.assertFalse(User.objects.exists())
+
+    def test_register_login_logout_flow_with_csrf_protection(self):
+        client = Client(enforce_csrf_checks=True)
+        client.get(reverse('register'))
+        response = client.post(reverse('register'), {
+            'username': 'csrf_player',
+            'password1': TEST_PASSWORD,
+            'password2': TEST_PASSWORD,
+            'csrfmiddlewaretoken': client.cookies['csrftoken'].value,
+        })
+        self.assertRedirects(response, reverse('login'))
+
+        response = client.post(reverse('login'), {
+            'username': 'csrf_player',
+            'password': TEST_PASSWORD,
+            'csrfmiddlewaretoken': client.cookies['csrftoken'].value,
+        })
+        self.assertRedirects(response, reverse('home'))
+        self.assertIn(SESSION_KEY, client.session)
+
+        # Logging in rotates the CSRF token; use the one from the member page.
+        home = client.get(reverse('home'))
+        self.assertContains(home, 'action="' + reverse('logout') + '"')
+        self.assertEqual(client.post(reverse('logout')).status_code, 403)
+        self.assertIn(SESSION_KEY, client.session)
+        response = client.post(reverse('logout'), {
+            'csrfmiddlewaretoken': client.cookies['csrftoken'].value,
+        })
+        self.assertRedirects(response, reverse('home'))
+        self.assertNotIn(SESSION_KEY, client.session)
